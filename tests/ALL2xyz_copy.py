@@ -4,7 +4,7 @@ from typing import List
 from pymatgen.core import Structure
 
 # Define lattice parameters for VASP box (update if needed)
-LATTICE = [[13.390, 0, 0], [0, 13.390, 0], [0, 0, 13.390]]
+LATTICE = [[12.530, 0, 0], [0, 12.530, 0], [0, 0, 12.530]]
 
 
 def read_vasp_traj(file_path: str):

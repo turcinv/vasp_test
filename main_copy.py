@@ -27,10 +27,6 @@ stop_monitoring: bool = False
 batch_size: int = 100
 
 
-# Analysis type selection (choose what to compute)
-ANALYSIS_TYPE: str = "reaction_times"  # Options: "reaction_times", "OH_dissociation", "HH_distances", "track_hydrogen"
-
-
 # Configure logging
 log_file = "reaction_processing.log"
 logging.basicConfig(
