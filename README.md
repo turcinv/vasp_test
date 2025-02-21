@@ -6,7 +6,7 @@ A brief description of the project, its purpose, and its main features.
 ## Installation
 1. Clone the repository:
    ```sh
-   git clone https://github.com/yourusername/repository.git
+   git clone https://github.com/turcinv/vasp_test.git
    ```
 2. Navigate to the project directory:
    ```sh
