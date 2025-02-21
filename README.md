@@ -10,7 +10,7 @@ A brief description of the project, its purpose, and its main features.
    ```
 2. Navigate to the project directory:
    ```sh
-   cd repository
+   cd vasp_test
    ```
 3. Install dependencies (if applicable):
    ```sh
