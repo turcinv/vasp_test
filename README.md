@@ -30,5 +30,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 Contributions are welcome! Please open an issue or submit a pull request.
 
 ## Contact
-For questions or feedback, contact [your email or GitHub profile].
+For questions or feedback, contact vitturcin@gmail.com.
 
