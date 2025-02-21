@@ -15,24 +15,32 @@ def fix_molecules(top: str, traj: str, box_dimension: float) -> None:
         traj (str): Path to the trajectory file.
         box_dimension (float): The size of the periodic box.
     """
-    traj_data: md.Trajectory = md.load(traj, top=top)
+    try:
+        traj_data: md.Trajectory = md.load(traj, top=top)
 
-    # Apply PBC to make molecules whole
-    traj_data.image_molecules(inplace=True)
+        # ✅ Manually define periodic unit cell dimensions
+        traj_data.unitcell_lengths = np.full((traj_data.n_frames, 3), box_dimension / 10, dtype=np.float32)  # nm
+        traj_data.unitcell_angles = np.full((traj_data.n_frames, 3), 90, dtype=np.float32)  # Assume cubic box
 
-    directory: str = os.path.dirname(traj)
-    outfile: str = os.path.join(directory, f'{os.path.basename(traj)}.fixed_test.xyz')
-    print(f"Saving trajectory in file: {outfile}")
+        # ✅ Apply PBC correction
+        traj_data.image_molecules(inplace=True)
 
-    with open(outfile, "w") as f:
-        for frame in tqdm(traj_data, desc='Processing frames'):
-            f.write(f"{frame.n_atoms}\n")
-            f.write("Frame\n")
-            for atom, pos in zip(frame.topology.atoms, frame.xyz[0]):
-                f.write(f"{atom.element.symbol} {pos[0]:.6f} {pos[1]:.6f} {pos[2]:.6f}\n")
+        directory: str = os.path.dirname(traj)
+        outfile: str = os.path.join(directory, f'{os.path.basename(traj)}.fixed_test.xyz')
+        print(f"✅ Saving trajectory in file: {outfile}")
 
-    del traj_data, directory, outfile
-    gc.collect()
+        with open(outfile, "w") as f:
+            for frame in tqdm(traj_data, desc='Processing frames'):
+                f.write(f"{frame.n_atoms}\n")
+                f.write("Frame\n")
+                for atom, pos in zip(frame.topology.atoms, frame.xyz[0]):
+                    f.write(f"{atom.element.symbol} {pos[0]:.6f} {pos[1]:.6f} {pos[2]:.6f}\n")
+
+        del traj_data, directory, outfile
+        gc.collect()
+
+    except Exception as e:
+        print(f"❌ Error processing {traj}: {e}")
 
 
 def process_trajectories(args: Tuple[str, str, float]) -> None:
@@ -58,7 +66,7 @@ def main(topology_file: str, trajectory_files: List[str], box_dimension: float) 
     with multiprocessing.Pool(processes=min(len(trajectory_files), os.cpu_count())) as pool:
         pool.map(process_trajectories, args_list)
 
-    print("All trajectory fixes completed.")
+    print("✅ All trajectory fixes completed.")
 
 
 if __name__ == "__main__":
@@ -77,10 +85,11 @@ if __name__ == "__main__":
             ])
 
     if not trajectory_files:
-        print("No traj.ALL files found!")
+        print("❌ No traj.ALL files found!")
+        exit(1)
 
-    print(f"Found {len(trajectory_files)} trajectory files.")
+    print(f"✅ Found {len(trajectory_files)} trajectory files.")
 
-    box_dimension: float = 13.390  # Example box size
+    box_dimension: float = 12.530  # Example box size
 
     main(topology_file, trajectory_files, box_dimension)
