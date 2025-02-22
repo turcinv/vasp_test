@@ -1,12 +1,14 @@
-import numpy as np
-import mdtraj as md
-from typing import List
 import gc
+from typing import List
+
+import mdtraj as md
+import numpy as np
+
 
 def save_reaction_times(
-    traj: md.Trajectory,
-    H_pairs: np.ndarray,
-    threshold: float = 1.2
+        traj: md.Trajectory,
+        H_pairs: np.ndarray,
+        threshold: float = 1.2
 ) -> List[float]:
     """
     Detects and saves the first reaction times (in picoseconds) where hydrogen pairs form

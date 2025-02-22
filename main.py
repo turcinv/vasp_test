@@ -14,8 +14,6 @@ import numpy as np
 import mdtraj as md
 import gc
 
-import random
-
 from vasp_tools.reaction_time import save_reaction_times
 from vasp_tools.find_HH import find_HH_distances
 from vasp_tools.check_OH import check_OH_dissociation
@@ -23,6 +21,8 @@ from vasp_tools.track_hydrogen import track_molecular_hydrogen
 
 # DEBUG
 DEBUG = True
+if DEBUG:
+    import random
 
 # File paths
 fp: str = "/data/work/Water_reactivity/prod-GGA-vasp/"
