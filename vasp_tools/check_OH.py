@@ -3,24 +3,17 @@ import numpy as np
 from typing import List, Tuple
 import gc
 
-def check_OH_dissociation(trajectory_file: str, topology_file: str, box_size: float, threshold: float = 2.0) -> None:
+def check_OH_dissociation(traj: md.Trajectory, threshold: float = 2.0) -> None:
     """
     Analyzes a molecular dynamics trajectory to detect dissociation and reassociation of O-H bonds in water molecules
     based on O-H bonds exceeding a threshold distance.
 
     Parameters:
-    - trajectory_file (str): Path to the trajectory file in XYZ format.
-    - topology_file (str): Path to the topology file.
-    - box_size (float): The simulation box size in Angstroms.
     - threshold (float, optional): Distance threshold in Angstroms for considering an O-H bond dissociated (default is 2.0 Å).
 
     Returns:
     - None: Prints dissociation events and the total number of dissociated bonds.
     """
-    # Load trajectory and apply periodic box size
-    traj: md.Trajectory = md.load(trajectory_file, top=topology_file)
-    traj.unitcell_lengths = np.full((traj.n_frames, 3), box_size / 10, dtype=np.float32)  # Convert box size to nm
-    traj.unitcell_angles = np.full((traj.n_frames, 3), 90, dtype=np.float32)
 
     # Extract topology
     topol: md.Topology = traj.topology
@@ -55,5 +48,5 @@ def check_OH_dissociation(trajectory_file: str, topology_file: str, box_size: fl
     print(f"Total number of dissociated bonds: {dissociated_count}")
 
     # Clear memory
-    del traj, topol, OH_pairs, distances, dissociated_frames, bond_label, first_dissociation_time
+    del topol, OH_pairs, distances, dissociated_frames, bond_label, first_dissociation_time
     gc.collect()

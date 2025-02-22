@@ -6,9 +6,8 @@ from typing import Optional, Dict
 import gc
 
 def find_HH_distances(
-        trajectory_file: str,
-        topology_file: str,
-        box_size: float,
+        traj: md.Trajectory,
+        H_pairs: np.ndarray,
         threshold: float = 1.2,
         plot: bool = True
 ) -> Optional[pd.DataFrame]:
@@ -27,17 +26,6 @@ def find_HH_distances(
     - If `plot=False`, returns a Pandas DataFrame containing H-H distances.
     - If `plot=True`, displays a plot and returns None.
     """
-
-    # Load trajectory
-    traj: md.Trajectory = md.load(trajectory_file, top=topology_file)
-    traj.unitcell_lengths = np.full((traj.n_frames, 3), box_size / 10, dtype=np.float32)  # Convert to nm
-    traj.unitcell_angles = np.full((traj.n_frames, 3), 90, dtype=np.float32)
-
-    # Select hydrogen atoms and create valid pairs
-    Hs: np.ndarray = traj.topology.select('element H')
-
-    # Ensure unique H-H pairs
-    H_pairs: np.ndarray = np.array([(h1, h2) for i, h1 in enumerate(Hs) for h2 in Hs[i + 1:]], dtype=int)
 
     # Convert threshold to nanometers
     threshold_nm: float = threshold / 10
@@ -78,7 +66,7 @@ def find_HH_distances(
         return None  # Explicitly returning None when plotting
 
     # Clear memory
-    del traj, Hs, H_pairs, all_distances, bonded_indices, bonded_pairs, distance_dict
+    del H_pairs, all_distances, bonded_indices, bonded_pairs, distance_dict
     gc.collect()
 
     return distances_df  # Return DataFrame when not plotting

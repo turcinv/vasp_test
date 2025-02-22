@@ -4,9 +4,8 @@ from typing import List
 import gc
 
 def save_reaction_times(
-    trajectory_file: str,
-    topology_file: str,
-    box_size: float,
+    traj: md.Trajectory,
+    H_pairs: np.ndarray,
     threshold: float = 1.2
 ) -> List[float]:
     """
@@ -14,25 +13,11 @@ def save_reaction_times(
     and persist as molecular hydrogen in a molecular dynamics trajectory.
 
     Parameters:
-    - trajectory_file (str): Path to the trajectory file.
-    - topology_file (str): Path to the topology file.
-    - box_size (float): Size of the simulation box in Ångströms.
     - threshold (float): Distance threshold in Ångströms for H-H bonding (default: 1.2 Å).
 
     Returns:
     - List[float]: A sorted list of reaction times in picoseconds.
     """
-
-    # Load trajectory and set periodic box
-    traj = md.load(trajectory_file, top=topology_file)
-    traj.unitcell_lengths = np.full((traj.n_frames, 3), box_size / 10, dtype=np.float32)  # Convert Å to nm
-    traj.unitcell_angles = np.full((traj.n_frames, 3), 90, dtype=np.float32)
-
-    # Select hydrogen atoms
-    Hs: np.ndarray = traj.topology.select('element H')
-
-    # Ensure unique H-H pairs
-    H_pairs = traj.topology.select_pairs(Hs, Hs)
 
     # Convert threshold to nanometers
     threshold_nm: float = threshold / 10
@@ -51,7 +36,7 @@ def save_reaction_times(
                 break  # Stop after the first persistent segment is found for this pair
 
     # Clear memory
-    del traj, Hs, H_pairs, all_distances, stable_start_indices, start_idx, reaction_time_ps
+    del all_distances, stable_start_indices, start_idx, reaction_time_ps
     gc.collect()
 
     # Return sorted reaction times

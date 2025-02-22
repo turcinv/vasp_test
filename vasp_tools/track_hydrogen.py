@@ -4,9 +4,8 @@ from typing import List, Tuple, Any
 import gc
 
 def track_molecular_hydrogen(
-    trajectory_file: str,
-    topology_file: str,
-    box_size: float,
+    traj: md.Trajectory,
+    H_pairs: np.ndarray,
     threshold: float = 1.2,
     write_indices: bool = True,
     output_indices: str = 'indices.txt'
@@ -17,9 +16,6 @@ def track_molecular_hydrogen(
     Optionally writes the hydrogen atom indices forming molecular hydrogen in a text file for visualization.
 
     Parameters:
-    - trajectory_file (str): Path to the XYZ trajectory file.
-    - topology_file (str): Path to the topology file.
-    - box_size (float): Size of the simulation box in Ångströms.
     - threshold (float): Distance threshold in Ångströms for H-H bonding (default is 1.2 Å).
     - write_indices (bool): If True, writes H-H pairs forming persistent molecular hydrogen to a file.
     - output_indices (str): Filename to save persistent molecular hydrogen indices.
@@ -27,17 +23,6 @@ def track_molecular_hydrogen(
     Returns:
     - List of tuples [(H-H pair (h1, h2), first frame)] where molecular hydrogen was persistently formed.
     """
-
-    # Load trajectory and set periodic box
-    traj: md.Trajectory = md.load(trajectory_file, top=topology_file)
-    traj.unitcell_lengths = np.full((traj.n_frames, 3), box_size / 10, dtype=np.float32)  # Convert Å to nm
-    traj.unitcell_angles = np.full((traj.n_frames, 3), 90, dtype=np.float32)
-
-    # Select all hydrogen atoms
-    Hs: np.ndarray = traj.topology.select('element H')
-
-    # Ensure unique H-H pairs
-    H_pairs: np.ndarray = np.array([(h1, h2) for i, h1 in enumerate(Hs) for h2 in Hs[i + 1:]], dtype=int)
 
     # Convert threshold to nanometers
     threshold_nm: float = threshold / 10
@@ -66,7 +51,7 @@ def track_molecular_hydrogen(
     print(f"Total persistent molecular hydrogen formations: {len(persistent_formations)}")
 
     # Clear memory
-    del traj, Hs, H_pairs, all_distances, below_threshold_frames, start_idx, pair_distances
+    del all_distances, below_threshold_frames, start_idx, pair_distances
     gc.collect()
 
     return persistent_formations
