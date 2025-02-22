@@ -9,7 +9,7 @@ def track_molecular_hydrogen(
     threshold: float = 1.2,
     write_indices: bool = True,
     output_indices: str = 'indices.txt'
-) -> List[Tuple[Tuple[int, int], int]]:
+):
     """
     Tracks the formation and persistence of molecular hydrogen in a molecular dynamics simulation
     based on the H-H distance being below a certain threshold.
@@ -31,9 +31,9 @@ def track_molecular_hydrogen(
     all_distances: np.ndarray = md.compute_distances(traj, H_pairs, opt=True, periodic=True)
 
     # Identify persistent hydrogen pairs
-    persistent_formations: List[Tuple[Tuple[Any, ...], Any]] = []
+    persistent_formations = []
     for idx, pair_distances in enumerate(all_distances.T):  # Iterate over H-H pairs
-        below_threshold_frames: np.ndarray = np.where(pair_distances < threshold_nm)[0]
+        below_threshold_frames = np.where(pair_distances < threshold_nm)[0]
 
         # If any sequence exists where bond is stable until the end
         for start_idx in below_threshold_frames:

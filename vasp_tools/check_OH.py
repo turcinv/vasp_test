@@ -3,6 +3,9 @@ import numpy as np
 from typing import List, Tuple
 import gc
 
+import main
+
+
 def check_OH_dissociation(traj: md.Trajectory, threshold: float = 2.0) -> None:
     """
     Analyzes a molecular dynamics trajectory to detect dissociation and reassociation of O-H bonds in water molecules
@@ -14,6 +17,8 @@ def check_OH_dissociation(traj: md.Trajectory, threshold: float = 2.0) -> None:
     Returns:
     - None: Prints dissociation events and the total number of dissociated bonds.
     """
+
+    logger = main.analysis_loggers['check_OH_dissociation']
 
     # Extract topology
     topol: md.Topology = traj.topology
@@ -45,8 +50,10 @@ def check_OH_dissociation(traj: md.Trajectory, threshold: float = 2.0) -> None:
             first_dissociation_time = round(float(dissociated_frames[0]) / 2000, 2)  # Assuming 2000 fps
             print(f"{bond_label} dissociated at {first_dissociation_time} ps")
 
-    print(f"Total number of dissociated bonds: {dissociated_count}")
+    logger.info(f"Total number of dissociated bonds: {dissociated_count}")
 
     # Clear memory
     del topol, OH_pairs, distances, dissociated_frames, bond_label, first_dissociation_time
     gc.collect()
+
+    return dissociated_count

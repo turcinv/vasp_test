@@ -135,21 +135,25 @@ if sys.platform == "win32":
 else:
     ctx = mp.get_context("fork")  # Linux/macOS can use "fork"
 
+# TODO plotting track_hydrogen
 def process_analysis(i: int) -> List[Tuple[int, float]]:
     """Processes a single trajectory and returns reaction times."""
     folder_name: str = f"trj_{i:03}"
     trajectory_file: str = f'{fp}10diel_20Li_64H2O/{folder_name}/traj.ALL.xyz'
+    analysis_results: dict= {}
 
     try:
         #  Get memory usage inside each worker
         pid = os.getpid()  # Current process ID
-        mem_usage = psutil.Process(pid).memory_info().rss / (1024 * 1024)
-        analysis_loggers['main'].info(f"Process {pid} (Trajectory {i}) using {mem_usage:.2f} MB RAM")
 
         # Load trajectory and set periodic box
         traj = md.load(trajectory_file, top=topology_file)
         traj.unitcell_lengths = np.full((traj.n_frames, 3), box_size / 10, dtype=np.float32)  # Convert Å to nm
         traj.unitcell_angles = np.full((traj.n_frames, 3), 90, dtype=np.float32)
+
+        # Log memory usage
+        mem_usage = psutil.Process(pid).memory_info().rss / (1024 * 1024)
+        analysis_loggers['main'].info(f"Process {pid} (Trajectory {i}) using {mem_usage:.2f} MB RAM")
 
         # Select all hydrogen atoms
         Hs: np.ndarray = traj.topology.select('element H')
@@ -160,26 +164,37 @@ def process_analysis(i: int) -> List[Tuple[int, float]]:
         # Selection of type of analysis
         for analysis in ANALYSIS_TYPE:
             if analysis == "save_reaction_times":
-                reaction_times: List[float] = save_reaction_times(traj=traj, H_pairs=H_pairs)
+                reaction_times: List[float] = save_reaction_times(
+                    traj=traj,
+                    H_pairs=H_pairs
+                )
+                analysis_results[analysis] = [(i, time) for time in reaction_times]
                 return [(i, time) for time in reaction_times]
 
             if analysis == "check_OH_dissociation":
                 if DEBUG:
                     ghost_find_OH_distances()
                 else:
-                    check_OH_dissociation(traj=traj)
+                    distances_OH_df = check_OH_dissociation(traj=traj)
+                    analysis_results[analysis] = distances_OH_df
 
             if analysis == "track_molecular_hydrogen":
                 if DEBUG:
                     ghost_track_molecular_hydrogen()
                 else:
-                    track_molecular_hydrogen(traj=traj, H_pairs=H_pairs)
+                    persistent_formations = track_molecular_hydrogen(
+                        traj=traj,
+                        H_pairs=H_pairs,
+                        output_indices=f'{fp}/10diel_20Li_64H2O/{folder_name}/indices.txt'
+                    )
+                    analysis_results[analysis] = persistent_formations
 
             if analysis == "find_HH_distances":
                 if DEBUG:
                     ghost_find_HH_distances()
                 else:
-                    find_HH_distances(traj=traj, H_pairs=H_pairs)
+                    distances_HH_df = find_HH_distances(traj=traj, H_pairs=H_pairs)
+                    analysis_results[analysis] = distances_HH_df
 
         del traj, Hs, H_pairs
         gc.collect()
@@ -209,7 +224,7 @@ def monitor_memory():
         time.sleep(10)  # Faster updates
 
 
-# TODO: implement more analysis
+# TODO: implement more analysis, results in analysis_results[analysis]
 def process_batch_reaction_times(start: int, end: int):
     """Processes a batch of trajectories and writes grouped reaction times."""
     num_cores: int = max(mp.cpu_count() - 1, 1)  # Use at most 12 threads

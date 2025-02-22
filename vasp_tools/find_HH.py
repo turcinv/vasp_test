@@ -16,9 +16,6 @@ def find_HH_distances(
     that indicate potential molecular hydrogen formation.
 
     Parameters:
-    - trajectory_file (str): Path to the trajectory file in XYZ format.
-    - topology_file (str): Path to the topology file.
-    - box_size (float): The simulation box size in Ångströms.
     - threshold (float): Distance threshold in Angstroms for potential bonding (default is 1.2 Å).
     - plot (bool): If True, plots the H-H distances; if False, returns the DataFrame.
 
