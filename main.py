@@ -35,7 +35,55 @@ stop_monitoring: bool = False
 batch_size: int = 100
 
 # Analysis type selection (choose what to compute)
-ANALYSIS_TYPE: List[str] = ["reaction_times"]  # Options: "reaction_times", "OH_dissociation", "HH_distances", "track_hydrogen"
+ANALYSIS_TYPE: List[str] = ["reaction_times"]
+# Options: "reaction_times", "find_HH_distances", "check_OH_dissociation", "track_molecular_hydrogen"
+
+# def is_jupyter():
+#     """Detect if the script is running inside a Jupyter Notebook."""
+#     try:
+#         from IPython import get_ipython
+#         return get_ipython() is not None
+#     except ImportError:
+#         return False
+#
+# if is_jupyter():
+#     # Jupyter Notebook: Use widgets for interactive selection
+#     import ipywidgets as widgets
+#     from IPython.display import display
+#
+#     available_analyses = ["reaction_times", "find_HH_distances", "check_OH_dissociation", "track_molecular_hydrogen"]
+#
+#     analysis_selector = widgets.SelectMultiple(
+#         options=available_analyses,
+#         value=["reaction_times"],
+#         description="Analyses:",
+#     )
+#
+#     run_button = widgets.Button(description="Run Analysis")
+#
+#
+#     def on_button_click(b):
+#         run_analysis(analysis_selector.value)
+#
+#
+#     run_button.on_click(on_button_click)
+#
+#     display(analysis_selector, run_button)
+
+# else:
+#     # Terminal: Use argparse
+#     import argparse
+#
+#     parser = argparse.ArgumentParser(description="Select analysis types.")
+#     parser.add_argument(
+#         "--analysis",
+#         nargs="+",
+#         choices=["reaction_times", "another_analysis"],
+#         default=["reaction_times"],
+#         help="Choose which analyses to run",
+#     )
+#     args = parser.parse_args()
+#     run_analysis(args.analysis)
 
 # Configure logging
 def configure_logging():
