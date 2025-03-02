@@ -22,7 +22,7 @@ from vasp_tools.reaction_time import save_reaction_times
 from vasp_tools.track_hydrogen import track_molecular_hydrogen
 
 # DEBUG
-DEBUG = True
+DEBUG = False
 if DEBUG:
     import random
 
@@ -97,8 +97,6 @@ def ghost_track_molecular_hydrogen():
 
     logger.info("Ghost analysis complete: Hydrogen tracking finished.")
 
-
-# --- GHOST ANALYSIS FUNCTIONS ---
 
 # Choose the safest multiprocessing context
 if sys.platform == "win32":
