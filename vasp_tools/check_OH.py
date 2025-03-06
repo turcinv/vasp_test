@@ -4,7 +4,11 @@ from typing import List, Tuple
 import gc
 
 
-def check_OH_dissociation(traj: md.Trajectory, threshold: float = 2.0) -> None:
+def check_OH_dissociation(
+        traj: md.Trajectory,
+        file_path: str,
+        threshold: float = 2.0
+) -> dict:
     """
     Analyzes a molecular dynamics trajectory to detect dissociation and reassociation of O-H bonds in water molecules
     based on O-H bonds exceeding a threshold distance.
@@ -37,17 +41,20 @@ def check_OH_dissociation(traj: md.Trajectory, threshold: float = 2.0) -> None:
     dissociated_count: int = 0
     threshold_nm: float = threshold / 10  # Convert Angstrom to nm
 
-    for i, (h, o) in enumerate(OH_pairs):
-        bond_label: str = f'Bond {i + 1} (H: {h}, O: {o})'
-        dissociated_frames = np.where(distances[:, i] > threshold_nm)[0]
+    with open(f'{file_path}/check_oh.log', "w", newline="") as f:
+        dissociation = {}
+        for i, (h, o) in enumerate(OH_pairs):
+            bond_label: str = f'Bond {i + 1} (H: {h}, O: {o})'
+            dissociated_frames = np.where(distances[:, i] > threshold_nm)[0]
 
-        if dissociated_frames.size > 0:
-            dissociated_count += 1
-            first_dissociation_time = round(float(dissociated_frames[0]) / 2000, 2)  # Assuming 2000 fps
-            print(f"{bond_label} dissociated at {first_dissociation_time} ps")
+            if dissociated_frames.size > 0:
+                dissociated_count += 1
+                first_dissociation_time = round(float(dissociated_frames[0]) / 2000, 2)  # Assuming 2000 fps
+                dissociation[i + 1] = {'H': h, 'O': o, 'first_dissociation_time': first_dissociation_time}
+                print(f"{bond_label} dissociated at {first_dissociation_time} ps", file=f)
 
     # Clear memory
     del topol, OH_pairs, distances, dissociated_frames, bond_label, first_dissociation_time
     gc.collect()
 
-    return dissociated_count
+    return dissociation

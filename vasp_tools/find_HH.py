@@ -8,6 +8,7 @@ import gc
 def find_HH_distances(
         traj: md.Trajectory,
         H_pairs: np.ndarray,
+        file_path: str,
         threshold: float = 1.2,
         plot: bool = True
 ) -> Optional[pd.DataFrame]:
@@ -34,7 +35,8 @@ def find_HH_distances(
     bonded_indices: np.ndarray = np.where(all_distances.min(axis=0) < threshold_nm)[0]
     bonded_pairs: np.ndarray = H_pairs[bonded_indices]
 
-    print(f"{len(bonded_pairs)} potential molecular hydrogen pairs detected.")
+    with open(f'{file_path}/HH_dist.log', 'w') as f:
+        print(f"{len(bonded_pairs)} potential molecular hydrogen pairs detected.", file=f)
 
     # Construct DataFrame
     distance_dict: Dict[str, np.ndarray] = {
@@ -58,7 +60,8 @@ def find_HH_distances(
         ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1), title='H-H Pairs', fontsize=8)
         ax.grid(True)
         plt.tight_layout()
-        plt.show()
+        plt.savefig(f'{file_path}/HH_dist.png', dpi=300)
+        # plt.show()
 
         return None  # Explicitly returning None when plotting
 

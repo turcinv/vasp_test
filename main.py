@@ -146,7 +146,10 @@ def process_analysis(i: int):
                 if DEBUG:
                     ghost_find_OH_distances()
                 else:
-                    distances_OH_df = check_OH_dissociation(traj=traj)
+                    distances_OH_df = check_OH_dissociation(
+                        traj=traj,
+                        file_path=f'{fp}10diel_20Li_64H2O/{folder_name}'
+                    )
                     save_pickle(distances_OH_df, result_file)
 
             if analysis == "track_molecular_hydrogen":
@@ -156,6 +159,7 @@ def process_analysis(i: int):
                     persistent_formations = track_molecular_hydrogen(
                         traj=traj,
                         H_pairs=H_pairs,
+                        file_path=f'{fp}10diel_20Li_64H2O/{folder_name}',
                         output_indices=f'{fp}/10diel_20Li_64H2O/{folder_name}/indices.txt'
                     )
                     save_pickle(persistent_formations, result_file)
@@ -164,7 +168,11 @@ def process_analysis(i: int):
                 if DEBUG:
                     ghost_find_HH_distances()
                 else:
-                    distances_HH_df = find_HH_distances(traj=traj, H_pairs=H_pairs)
+                    distances_HH_df = find_HH_distances(
+                        traj=traj,
+                        H_pairs=H_pairs,
+                        file_path=f'{fp}10diel_20Li_64H2O/{folder_name}'
+                    )
                     save_pickle(distances_HH_df, result_file)
 
         del traj, Hs, H_pairs
