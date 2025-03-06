@@ -50,7 +50,7 @@ logger = logging.getLogger(__name__)
 
 
 # --- GHOST ANALYSIS FUNCTIONS ---
-def ghost_find_HH_distances():
+def ghost_find_hh_distances():
     logger.info("Starting ghost analysis: Finding H-H distances")
 
     for i in range(3):
@@ -66,7 +66,7 @@ def ghost_find_HH_distances():
     logger.info("Ghost analysis complete: H-H distances checked.")
 
 
-def ghost_find_OH_distances():
+def ghost_find_oh_distances():
     logger.info("Starting ghost analysis: Checking OH dissociation")
 
     for i in range(3):
@@ -133,10 +133,10 @@ def process_analysis(i: int):
         logger.info(f"Process {pid} (Trajectory {i}) using {mem_usage:.2f} MB RAM")
 
         # Select all hydrogen atoms
-        Hs: np.ndarray = traj.topology.select('element H')
+        hs: np.ndarray = traj.topology.select('element H')
 
         # Ensure unique H-H pairs
-        H_pairs: np.ndarray = np.array([(h1, h2) for i, h1 in enumerate(Hs) for h2 in Hs[i + 1:]], dtype=int)
+        h_pairs: np.ndarray = np.array([(h1, h2) for i, h1 in enumerate(hs) for h2 in hs[i + 1:]], dtype=int)
 
         # Selection of type of analysis
         for analysis in ANALYSIS_TYPE:
@@ -144,13 +144,13 @@ def process_analysis(i: int):
 
             if analysis == "check_OH_dissociation":
                 if DEBUG:
-                    ghost_find_OH_distances()
+                    ghost_find_oh_distances()
                 else:
-                    distances_OH_df = check_OH_dissociation(
+                    distances_oh_df = check_OH_dissociation(
                         traj=traj,
                         file_path=f'{fp}10diel_20Li_64H2O/{folder_name}'
                     )
-                    save_pickle(distances_OH_df, result_file)
+                    save_pickle(distances_oh_df, result_file)
 
             if analysis == "track_molecular_hydrogen":
                 if DEBUG:
@@ -158,7 +158,7 @@ def process_analysis(i: int):
                 else:
                     persistent_formations = track_molecular_hydrogen(
                         traj=traj,
-                        H_pairs=H_pairs,
+                        H_pairs=h_pairs,
                         file_path=f'{fp}10diel_20Li_64H2O/{folder_name}',
                         output_indices=f'{fp}/10diel_20Li_64H2O/{folder_name}/indices.txt'
                     )
@@ -166,16 +166,16 @@ def process_analysis(i: int):
 
             if analysis == "find_HH_distances":
                 if DEBUG:
-                    ghost_find_HH_distances()
+                    ghost_find_hh_distances()
                 else:
-                    distances_HH_df = find_HH_distances(
+                    distances_hh_df = find_HH_distances(
                         traj=traj,
-                        H_pairs=H_pairs,
+                        H_pairs=h_pairs,
                         file_path=f'{fp}10diel_20Li_64H2O/{folder_name}'
                     )
-                    save_pickle(distances_HH_df, result_file)
+                    save_pickle(distances_hh_df, result_file)
 
-        del traj, Hs, H_pairs
+        del traj, hs, h_pairs
         gc.collect()
 
 
@@ -197,16 +197,16 @@ def process_reaction_times(i: int):
         traj.unitcell_angles = np.full((traj.n_frames, 3), 90, dtype=np.float32)
 
         # Select all hydrogen atoms
-        Hs: np.ndarray = traj.topology.select('element H')
+        hs: np.ndarray = traj.topology.select('element H')
 
         # Ensure unique H-H pairs
-        H_pairs: np.ndarray = np.array([(h1, h2) for i, h1 in enumerate(Hs) for h2 in Hs[i + 1:]], dtype=int)
-        reaction_times = save_reaction_times(traj=traj, H_pairs=H_pairs)
+        h_pairs: np.ndarray = np.array([(h1, h2) for i, h1 in enumerate(hs) for h2 in hs[i + 1:]], dtype=int)
+        reaction_times = save_reaction_times(traj=traj, H_pairs=h_pairs)
 
-        del traj, Hs, H_pairs
+        del traj, hs, h_pairs
         gc.collect()
 
-        return [(i, time) for time in reaction_times]
+        return [(i, time_i) for time_i in reaction_times]
     except Exception as e:
         logger.error(f"Trajectory {i} failed: {e}")
         return []
@@ -254,7 +254,7 @@ def process_reaction_times_batch(start: int, end: int):
         #  Flatten results (list of lists → single list of tuples)
         all_reactions: List[Tuple[int, float]] = [entry for sublist in results for entry in sublist]
 
-        #  Group by trajectory ID using defaultdict
+        #  Group by trajectory ID using default-dict
         reaction_dict = defaultdict(list)
         for traj_id, reaction_time in all_reactions:
             reaction_dict[traj_id].append(reaction_time)
