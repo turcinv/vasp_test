@@ -27,8 +27,10 @@ if DEBUG:
     import random
 
 # File paths
-fp: str = "/data/work/Water_reactivity/prod-GGA-vasp/"
-topology_file: str = fp + '10diel_20Li_64H2O/top.pdb'
+# fp: str = "/data/work/Water_reactivity/prod-GGA-vasp/"
+fp: str ='/mnt/work_2/10diel-GGA-for-analysis/'
+# topology_file: str = fp + '10diel_20Li_64H2O/top.pdb'
+topology_file: str = fp + 'top.pdb'
 box_size: float = 13.390
 output_file: str = '10_diel_reaction_times.csv'
 
@@ -134,6 +136,7 @@ def process_analysis(i: int):
 
         # Select all hydrogen atoms
         hs: np.ndarray = traj.topology.select('element H')
+        Os: np.ndarray = traj.topology.select('element O')
 
         # Ensure unique H-H pairs
         h_pairs: np.ndarray = np.array([(h1, h2) for i, h1 in enumerate(hs) for h2 in hs[i + 1:]], dtype=int)
@@ -148,6 +151,8 @@ def process_analysis(i: int):
                 else:
                     distances_oh_df = check_OH_dissociation(
                         traj=traj,
+                        hs=hs,
+                        os=Os,
                         file_path=f'{fp}10diel_20Li_64H2O/{folder_name}'
                     )
                     save_pickle(distances_oh_df, result_file)
@@ -175,7 +180,7 @@ def process_analysis(i: int):
                     )
                     save_pickle(distances_hh_df, result_file)
 
-        del traj, hs, h_pairs
+        del traj, hs, h_pairs, os
         gc.collect()
 
 

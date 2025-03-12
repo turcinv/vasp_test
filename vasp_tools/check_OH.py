@@ -6,6 +6,8 @@ import gc
 
 def check_OH_dissociation(
         traj: md.Trajectory,
+        hs: np.ndarray,
+        os: np.ndarray,
         file_path: str,
         threshold: float = 2.0
 ) -> dict:
@@ -25,17 +27,14 @@ def check_OH_dissociation(
 
     # Find O-H bonds dynamically from topology
     OH_pairs: List[Tuple[int, int]] = []
-    for bond in topol.bonds:
-        if bond[0].element.symbol == 'O' and bond[1].element.symbol == 'H':
-            OH_pairs.append((bond[1].index, bond[0].index))  # (H, O)
-        elif bond[0].element.symbol == 'H' and bond[1].element.symbol == 'O':
-            OH_pairs.append((bond[0].index, bond[1].index))  # (H, O)
 
-    if not OH_pairs:
-        raise ValueError("No O-H bonds detected in the topology.")
+    for o in os:
+        hydrogen_start_index = 2 * (o - os[0])
+        OH_pairs.append((hs[hydrogen_start_index], o))
+        OH_pairs.append((hs[hydrogen_start_index + 1], o))
 
-    # Compute O-H distances for all bonds in bulk
-    distances: np.ndarray = md.compute_distances(traj, OH_pairs, opt=True, periodic=True)  # nm
+    # # Compute O-H distances for all bonds in bulk
+    # distances: np.ndarray = md.compute_distances(traj, OH_pairs, opt=True, periodic=True)  # nm
 
     # Check dissociation
     dissociated_count: int = 0
@@ -45,16 +44,17 @@ def check_OH_dissociation(
         dissociation = {}
         for i, (h, o) in enumerate(OH_pairs):
             bond_label: str = f'Bond {i + 1} (H: {h}, O: {o})'
-            dissociated_frames = np.where(distances[:, i] > threshold_nm)[0]
+            distances = md.compute_distances(traj, [[h, o]], opt=True, periodic=True)[:, 0]
+            dissociated = np.any(distances > (threshold / 10))  # Convert threshold to nm
 
-            if dissociated_frames.size > 0:
+            if dissociated:
                 dissociated_count += 1
-                first_dissociation_time = round(float(dissociated_frames[0]) / 2000, 2)  # Assuming 2000 fps
-                dissociation[i + 1] = {'H': h, 'O': o, 'first_dissociation_time': first_dissociation_time}
-                print(f"{bond_label} dissociated at {first_dissociation_time} ps", file=f)
+                first_dissociation_frame = np.argmax(distances > (threshold_nm))
+                dissociation[i + 1] = {'H': h, 'O': o, 'first_dissociation_time': np.round(first_dissociation_frame/2000, 2)}
+                print(f"{bond_label} dissociated at {np.round(first_dissociation_frame / 2000, 2)} ps", file=f)
 
     # Clear memory
-    del topol, OH_pairs, distances, dissociated_frames, bond_label, first_dissociation_time
+    del topol, OH_pairs, distances, bond_label
     gc.collect()
 
     return dissociation
