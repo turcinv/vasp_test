@@ -1,6 +1,5 @@
 import mdtraj as md
 import numpy as np
-from typing import List, Tuple, Any
 import gc
 
 def track_molecular_hydrogen(

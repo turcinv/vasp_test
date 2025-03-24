@@ -1,0 +1,7 @@
+mdtraj
+numpy
+scipy
+psutil
+colorama
+setuptools
+pandas
