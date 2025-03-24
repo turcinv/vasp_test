@@ -16,8 +16,8 @@ import psutil
 from colorama import Fore, Style
 from tqdm import tqdm
 
-from vasp_tools.check_OH import check_OH_dissociation
-from vasp_tools.find_HH import find_HH_distances
+from vasp_tools.check_OH import check_oh_dissociation
+from vasp_tools.find_HH import find_hh_distances
 from vasp_tools.reaction_time import save_reaction_times
 from vasp_tools.track_hydrogen import track_molecular_hydrogen
 
@@ -153,7 +153,7 @@ def process_analysis(i: int):
                 if DEBUG:
                     ghost_find_oh_distances()
                 else:
-                    distances_oh_df = check_OH_dissociation(
+                    distances_oh_df = check_oh_dissociation(
                         traj=traj,
                         hs=hs,
                         os=Os,
@@ -167,7 +167,7 @@ def process_analysis(i: int):
                 else:
                     persistent_formations = track_molecular_hydrogen(
                         traj=traj,
-                        H_pairs=h_pairs,
+                        h_pairs=h_pairs,
                         file_path=f'{fp}10diel_20Li_64H2O/{folder_name}',
                         output_indices=f'{fp}/10diel_20Li_64H2O/{folder_name}/indices.txt'
                     )
@@ -177,9 +177,9 @@ def process_analysis(i: int):
                 if DEBUG:
                     ghost_find_hh_distances()
                 else:
-                    distances_hh_df = find_HH_distances(
+                    distances_hh_df = find_hh_distances(
                         traj=traj,
-                        H_pairs=h_pairs,
+                        h_pairs=h_pairs,
                         file_path=f'{fp}10diel_20Li_64H2O/{folder_name}'
                     )
                     save_pickle(distances_hh_df, result_file)
@@ -212,7 +212,7 @@ def process_reaction_times(i: int):
 
         # Ensure unique H-H pairs
         h_pairs: np.ndarray = np.array([(h1, h2) for i, h1 in enumerate(hs) for h2 in hs[i + 1:]], dtype=int)
-        reaction_times = save_reaction_times(traj=traj, H_pairs=h_pairs)
+        reaction_times = save_reaction_times(traj=traj, h_pairs=h_pairs)
 
         del traj, hs, h_pairs
         gc.collect()

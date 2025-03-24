@@ -12,8 +12,8 @@ from colorama import Fore
 import logging
 
 from vasp_tools.reaction_time import save_reaction_times
-from vasp_tools.find_HH import find_HH_distances
-from vasp_tools.check_OH import check_OH_dissociation
+from vasp_tools.find_HH import find_hh_distances
+from vasp_tools.check_OH import check_oh_dissociation
 from vasp_tools.track_hydrogen import track_molecular_hydrogen
 
 # File paths

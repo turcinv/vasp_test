@@ -4,7 +4,7 @@ from typing import List, Tuple
 import gc
 
 
-def check_OH_dissociation(
+def check_oh_dissociation(
         traj: md.Trajectory,
         hs: np.ndarray,
         os: np.ndarray,
@@ -23,19 +23,19 @@ def check_OH_dissociation(
     """
 
     # Find O-H bonds dynamically from topology
-    OH_pairs: List[Tuple[np.ndarray, int]] = []
+    oh_pairs: List[Tuple[np.ndarray, int]] = []
 
     for o in os:
         hydrogen_start_index = 2 * (o - os[0])
-        OH_pairs.append((hs[hydrogen_start_index], o))
-        OH_pairs.append((hs[hydrogen_start_index + 1], o))
+        oh_pairs.append((hs[hydrogen_start_index], o))
+        oh_pairs.append((hs[hydrogen_start_index + 1], o))
 
     threshold_nm: float = threshold / 10  # Convert Angstrom to nm
 
     with open(f'{file_path}/check_oh.log', "w", newline="") as f:
         dissociation = {}
         dissociated_count: int = 0
-        for i, (h, o) in enumerate(OH_pairs):
+        for i, (h, o) in enumerate(oh_pairs):
             bond_label: str = f'Bond {i + 1} (H: {h}, O: {o})'
             distances = np.array(md.compute_distances(traj, [[h, o]], opt=True, periodic=True))[:, 0]
             dissociated = np.any(distances > (threshold / 10))  # Convert threshold to nm
@@ -48,7 +48,7 @@ def check_OH_dissociation(
 
 
     # Clear memory
-    del OH_pairs, distances, bond_label
+    del oh_pairs, distances, bond_label
     gc.collect()
 
     return dissociation
