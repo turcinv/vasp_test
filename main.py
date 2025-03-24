@@ -44,6 +44,7 @@ batch_size: int = 100
 
 # Analysis type selection (choose what to compute)
 ANALYSIS_TYPE: List[str] = ["find_HH_distances", "check_OH_dissociation", "track_molecular_hydrogen"]
+#ANALYSIS_TYPE: List[str] = ["reaction_times"]
 # Options: "reaction_times", "find_HH_distances", "check_OH_dissociation", "track_molecular_hydrogen"
 
 # Configure logging
@@ -258,10 +259,11 @@ def process_reaction_times_batch(start: int, end: int):
 
     with ctx.Pool(processes=parallel_jobs) as pool:
         results: List[List[Tuple[int, float]]] = list(
-            tqdm(pool.imap(process_analysis, range(start, end)), total=(end - start),
+            tqdm(pool.imap(process_reaction_times, range(start, end)), total=(end - start),
                  desc=f"Processing {start}-{end}", ncols=100)
         )
         #  Flatten results (list of lists → single list of tuples)
+
         all_reactions: List[Tuple[int, float]] = [entry for sublist in results for entry in sublist]
 
         #  Group by trajectory ID using default-dict
@@ -295,8 +297,10 @@ def main() -> None:
             # Run reaction times in parallel
             process_reaction_times_batch(batch_start, batch_end)
 
-        # Run all other analyses in parallel
-        run_parallel_jobs(process_analysis, batch_start, batch_end)
+
+        if "find_HH_distances" in ANALYSIS_TYPE or "check_OH_dissociation" in ANALYSIS_TYPE or "track_molecular_hydrogen" in ANALYSIS_TYPE:
+            # Run all other analyses in parallel
+            run_parallel_jobs(process_analysis, batch_start, batch_end)
 
     stop_monitoring = True  # Stop memory monitoring
 
@@ -316,11 +320,14 @@ if __name__ == '__main__':
 
         print(Fore.GREEN + "[INFO] Computation completed.")
         logger.info("Computation completed.")
+        print(Style.RESET_ALL)
 
     except KeyboardInterrupt:
         print(Fore.RED + "[ERROR] Computation interrupted by user.")
         logger.error("Computation interrupted by user.")
+        print(Style.RESET_ALL)
 
     except Exception as e:
         print(Fore.RED + f"[ERROR] An error occurred: {e}")
         logger.error(f"An error occurred: {e}")
+        print(Style.RESET_ALL)

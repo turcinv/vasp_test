@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import mdtraj as md
-from typing import Optional, Dict
+from typing import Optional
 import gc
 
 def find_HH_distances(
@@ -34,7 +34,6 @@ def find_HH_distances(
     # Filter pairs that ever fall below the threshold
     bonded_indices: np.ndarray = np.where(all_distances.min(axis=0) < threshold_nm)[0]
     bonded_indices = bonded_indices.astype(int)
-    bonded_pairs = H_pairs[bonded_indices]  # Ensure valid integer indexing
 
 
 
@@ -76,11 +75,7 @@ def find_HH_distances(
         return None
 
     fig, ax = plt.subplots(figsize=(9, 4))
-
-
     time_index = np.arange(distances_df.shape[0]) / 2000  # Ensure valid time scale
-
-    ax.set_ylim(0, distances_df.select_dtypes(include=[np.number]).max().max() * 10 + 1)
 
     for col in distances_df.columns:
         try:
@@ -93,7 +88,7 @@ def find_HH_distances(
     ax.set_xlabel('Time [ps]', fontsize=12)
     ax.set_ylabel('Distance [Å]', fontsize=12)
     ax.set_title('H-H Distances Over Time', fontsize=14)
-
+    ax.set_ylim(0.5, 6)
     ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1), title='H-H Pairs', fontsize=8)
     ax.grid(True)
     plt.tight_layout()
