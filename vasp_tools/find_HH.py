@@ -33,37 +33,72 @@ def find_HH_distances(
 
     # Filter pairs that ever fall below the threshold
     bonded_indices: np.ndarray = np.where(all_distances.min(axis=0) < threshold_nm)[0]
-    bonded_pairs: np.ndarray = H_pairs[bonded_indices]
+    bonded_indices = bonded_indices.astype(int)
+    bonded_pairs = H_pairs[bonded_indices]  # Ensure valid integer indexing
+
+
+
+    if bonded_indices.size > 0:
+        bonded_indices = bonded_indices.astype(int)  # Ensure it's integer-based
+        valid_bonded_indices = bonded_indices[bonded_indices < H_pairs.shape[0]]  # Ensure no out-of-bounds
+        bonded_pairs = H_pairs[valid_bonded_indices]
+    else:
+        bonded_pairs = np.empty((0, 2), dtype=int)  # Handle empty case
+
+    # Identifying pairs that form and then remain formed
+    persistent_formations = []
+    persistent_count = 0
 
     with open(f'{file_path}/HH_dist.log', 'w') as f:
-        print(f"{len(bonded_pairs)} potential molecular hydrogen pairs detected.", file=f)
+        for idx, pair_distances in enumerate(all_distances.T):  # Transpose to iterate over pairs
+            stable_start_indices = np.where(pair_distances < threshold_nm)[0]
 
-    # Construct DataFrame
-    distance_dict: Dict[str, np.ndarray] = {
-        f'Pair {i + 1} (H{h1}-H{h2})': all_distances[:, idx]
-        for i, (h1, h2), idx in zip(range(len(bonded_pairs)), bonded_pairs, bonded_indices)
-    }
+            # Check if there's any segment from some index till the end that's below threshold
+            for start_idx in stable_start_indices:
+                if (pair_distances[start_idx:] < threshold_nm).all():
+                    persistent_formations.append((H_pairs[idx], start_idx))
+                    persistent_count += 1
+                    print(f"Hydrogen pair {H_pairs[idx]} formed molecular hydrogen persistently from {np.round(start_idx / 2000, 2)} ps",
+                          file=f, flush=True)
+                    break  # Stop after the first persistent segment is found for this pair
+
+        print(f"Total persistent formations: {persistent_count}", file=f, flush=True)
+
+    distance_dict = {f'Pair {i + 1} (H{pair[0]}-H{pair[1]})': all_distances[:, idx]
+                     for i, pair in enumerate(bonded_pairs)
+                     for idx in np.where((H_pairs == pair).all(axis=1))[0]}
 
     distances_df: pd.DataFrame = pd.DataFrame(distance_dict)
 
     # Plot if required
-    if plot and not distances_df.empty:
-        fig, ax = plt.subplots(figsize=(9, 4))
+    if not plot and not distances_df.empty:
+        print("Warning: distances_df is empty, skipping plot.")
+        return None
 
-        for col in distances_df.columns:
-            ax.plot(distances_df.index / 2000, distances_df[col] * 10, label=col, lw=1)
+    fig, ax = plt.subplots(figsize=(9, 4))
 
-        ax.set_xlabel('Time [ps]', fontsize=12)
-        ax.set_ylabel('Distance [Å]', fontsize=12)
-        ax.set_title('H-H Distances Over Time', fontsize=14)
-        ax.set_ylim(0, distances_df.max().max() * 10 + 1)  # Dynamic Y-limit
-        ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1), title='H-H Pairs', fontsize=8)
-        ax.grid(True)
-        plt.tight_layout()
-        plt.savefig(f'{file_path}/HH_dist.png', dpi=300)
-        # plt.show()
 
-        return None  # Explicitly returning None when plotting
+    time_index = np.arange(distances_df.shape[0]) / 2000  # Ensure valid time scale
+
+    ax.set_ylim(0, distances_df.select_dtypes(include=[np.number]).max().max() * 10 + 1)
+
+    for col in distances_df.columns:
+        try:
+            distances_df[col] = distances_df[col].fillna(0)
+            distances = np.array(distances_df[col], dtype=np.float64) * 10
+            ax.plot(time_index, distances, label=col, lw=1)
+        except Exception as e:
+            print(f"Error while processing column {col}: {e}")
+
+    ax.set_xlabel('Time [ps]', fontsize=12)
+    ax.set_ylabel('Distance [Å]', fontsize=12)
+    ax.set_title('H-H Distances Over Time', fontsize=14)
+
+    ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1), title='H-H Pairs', fontsize=8)
+    ax.grid(True)
+    plt.tight_layout()
+    plt.savefig(f'{file_path}/HH_dist.png', dpi=300)
+
 
     # Clear memory
     del H_pairs, all_distances, bonded_indices, bonded_pairs, distance_dict

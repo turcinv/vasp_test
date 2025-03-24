@@ -13,13 +13,17 @@ from typing import List, Tuple, Any
 import mdtraj as md
 import numpy as np
 import psutil
-from colorama import Fore
+from colorama import Fore, Style
 from tqdm import tqdm
 
 from vasp_tools.check_OH import check_OH_dissociation
 from vasp_tools.find_HH import find_HH_distances
 from vasp_tools.reaction_time import save_reaction_times
 from vasp_tools.track_hydrogen import track_molecular_hydrogen
+
+import warnings
+warnings.filterwarnings("ignore", category=RuntimeWarning)
+warnings.filterwarnings("ignore", category=UserWarning)
 
 # DEBUG
 DEBUG = False
@@ -30,7 +34,7 @@ if DEBUG:
 # fp: str = "/data/work/Water_reactivity/prod-GGA-vasp/"
 fp: str ='/mnt/work_2/10diel-GGA-for-analysis/'
 # topology_file: str = fp + '10diel_20Li_64H2O/top.pdb'
-topology_file: str = fp + 'top.pdb'
+topology_file: str = fp + '10diel_20Li_64H2O/top.pdb'
 box_size: float = 13.390
 output_file: str = '10_diel_reaction_times.csv'
 
@@ -39,12 +43,11 @@ stop_monitoring: bool = False
 batch_size: int = 100
 
 # Analysis type selection (choose what to compute)
-ANALYSIS_TYPE: List[str] = ["reaction_times", "find_HH_distances", "check_OH_dissociation", "track_molecular_hydrogen"]
+ANALYSIS_TYPE: List[str] = ["find_HH_distances", "check_OH_dissociation", "track_molecular_hydrogen"]
 # Options: "reaction_times", "find_HH_distances", "check_OH_dissociation", "track_molecular_hydrogen"
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[logging.FileHandler("reaction_processing.log", mode='w'), logging.StreamHandler(sys.stderr)]
 )
@@ -180,13 +183,15 @@ def process_analysis(i: int):
                     )
                     save_pickle(distances_hh_df, result_file)
 
-        del traj, hs, h_pairs, os
+        
+        del traj, hs, h_pairs, Os
         gc.collect()
 
 
     except Exception as e:
         logger.error(f"Trajectory {i} failed: {e}")
         print(Fore.RED + f"[ERROR] Trajectory {i} failed: {e}")
+        print(Style.RESET_ALL)
         return []
 
 
@@ -231,6 +236,7 @@ def monitor_memory():
         total_memory_mb = total_memory / (1024 * 1024)  # Convert bytes to MB
         logger.info(f"Total RAM Usage: {total_memory_mb:.2f} MB")
 
+
         sys.stdout.flush()  # Force live updates in some terminals
         time.sleep(10)  # Faster updates
 
@@ -255,7 +261,6 @@ def process_reaction_times_batch(start: int, end: int):
             tqdm(pool.imap(process_analysis, range(start, end)), total=(end - start),
                  desc=f"Processing {start}-{end}", ncols=100)
         )
-
         #  Flatten results (list of lists → single list of tuples)
         all_reactions: List[Tuple[int, float]] = [entry for sublist in results for entry in sublist]
 
@@ -297,16 +302,25 @@ def main() -> None:
 
 
 if __name__ == '__main__':
-    stop_monitoring = False
+    try:
+        stop_monitoring = False
 
-    #  Start RAM monitoring thread before starting computation
-    monitor_thread = threading.Thread(target=monitor_memory, daemon=True)
-    monitor_thread.start()
+        #  Start RAM monitoring thread before starting computation
+        monitor_thread = threading.Thread(target=monitor_memory, daemon=True)
+        monitor_thread.start()
 
-    #  Run main computation
-    main()
+        #  Run main computation
+        main()
 
-    monitor_thread.join()  # Wait for monitoring thread to exit
+        monitor_thread.join()  # Wait for monitoring thread to exit
 
-    print(Fore.GREEN + "[INFO] Computation completed.")
-    logger.info("Computation completed.")
+        print(Fore.GREEN + "[INFO] Computation completed.")
+        logger.info("Computation completed.")
+
+    except KeyboardInterrupt:
+        print(Fore.RED + "[ERROR] Computation interrupted by user.")
+        logger.error("Computation interrupted by user.")
+
+    except Exception as e:
+        print(Fore.RED + f"[ERROR] An error occurred: {e}")
+        logger.error(f"An error occurred: {e}")

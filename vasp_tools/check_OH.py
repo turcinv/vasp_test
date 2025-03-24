@@ -42,16 +42,18 @@ def check_OH_dissociation(
 
     with open(f'{file_path}/check_oh.log', "w", newline="") as f:
         dissociation = {}
+        dissociated_count = 0
         for i, (h, o) in enumerate(OH_pairs):
             bond_label: str = f'Bond {i + 1} (H: {h}, O: {o})'
-            distances = md.compute_distances(traj, [[h, o]], opt=True, periodic=True)[:, 0]
+            distances = np.array(md.compute_distances(traj, [[h, o]], opt=True, periodic=True))[:, 0]
             dissociated = np.any(distances > (threshold / 10))  # Convert threshold to nm
 
             if dissociated:
                 dissociated_count += 1
                 first_dissociation_frame = np.argmax(distances > (threshold_nm))
                 dissociation[i + 1] = {'H': h, 'O': o, 'first_dissociation_time': np.round(first_dissociation_frame/2000, 2)}
-                print(f"{bond_label} dissociated at {np.round(first_dissociation_frame / 2000, 2)} ps", file=f)
+                print(f"{bond_label} dissociated at {np.round(first_dissociation_frame / 2000, 2)} ps", file=f, flush=True)
+
 
     # Clear memory
     del topol, OH_pairs, distances, bond_label

@@ -25,7 +25,7 @@ def save_reaction_times(
     threshold_nm: float = threshold / 10
 
     # Compute all H-H distances
-    all_distances: np.ndarray = md.compute_distances(traj, H_pairs, opt=True, periodic=True)
+    all_distances: np.array = np.array(md.compute_distances(traj, H_pairs, opt=True, periodic=True))[:, 0]
 
     # Identify first reaction times
     reaction_times: List[float] = []

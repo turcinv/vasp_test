@@ -29,7 +29,8 @@ def track_molecular_hydrogen(
     threshold_nm: float = threshold / 10
 
     # Compute all H-H distances
-    all_distances: np.ndarray = md.compute_distances(traj, H_pairs, opt=True, periodic=True)
+    all_distances: np.ndarray = np.array(md.compute_distances(traj, H_pairs, opt=True, periodic=True))
+    computed = md.compute_distances(traj, H_pairs, opt=True, periodic=True)
 
     with open(f'{file_path}/track_H2.log', 'w') as f:
         # Identify persistent hydrogen pairs
@@ -41,8 +42,11 @@ def track_molecular_hydrogen(
             for start_idx in below_threshold_frames:
                 if np.all(pair_distances[start_idx:] < threshold_nm):
                     persistent_formations.append((tuple(H_pairs[idx]), start_idx))
-                    print(f"Hydrogen pair {H_pairs[idx]} formed persistently from {np.round(start_idx / 2000, 2)} ps", file=f)
+                    print(f"Hydrogen pair {H_pairs[idx]} formed persistently from {np.round(start_idx / 2000, 2)} ps", file=f, flush=True)
                     break  # Stop checking once the first persistent formation is found
+
+        persistent_count = len(persistent_formations)
+        print(f"Total persistent molecular hydrogen formations: {persistent_count}", file=f, flush=True)
 
     # Write indices to file if requested
     if write_indices and persistent_formations:
