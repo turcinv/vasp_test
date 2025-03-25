@@ -12,7 +12,7 @@ A brief description of the project, its purpose, and its main features.
    ```sh
    cd vasp_test
    ```
-3. Install dependencies (if applicable):
+3. Install dependencies (if applicable) - for now not work:
    ```sh
    pip install -r requirements.txt
    ```
