@@ -22,6 +22,7 @@ from vasp_tools.reaction_time import save_reaction_times
 from vasp_tools.track_hydrogen import track_molecular_hydrogen
 
 import warnings
+
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
 
@@ -60,6 +61,7 @@ if sys.platform == "win32":
 else:
     ctx = mp.get_context("fork")  # Linux/macOS can use "fork"
 
+
 def find_trajectories(root_folder: Path = fp) -> None:
     """
         Find all trajectories in the root folder.
@@ -86,7 +88,6 @@ def find_trajectories(root_folder: Path = fp) -> None:
             print(e)
 
 
-# TODO: update documentation
 def save_pickle(data: Any, file_path: str) -> None:
     """
         Save data to a pickle file.
@@ -105,7 +106,6 @@ def save_pickle(data: Any, file_path: str) -> None:
         logger.error(f"Failed to save pickle file {file_path}: {e}")
 
 
-# TODO: update documentation
 def process_analysis(trajectory_number: int) -> None:
     """
         Process a single trajectory.
@@ -148,7 +148,7 @@ def process_analysis(trajectory_number: int) -> None:
                     traj=traj,
                     hs=hs,
                     os=Os,
-                    file_path=f'{folder_name}' # TODO: change to trajectory file
+                    file_path=f'{folder_name}'  # TODO: change to trajectory file
                 )
                 save_pickle(distances_oh_df, result_file)
 
@@ -156,7 +156,7 @@ def process_analysis(trajectory_number: int) -> None:
                 persistent_formations = track_molecular_hydrogen(
                     traj=traj,
                     h_pairs=h_pairs,
-                    file_path=f'{folder_name}', # TODO: change to trajectory file
+                    file_path=f'{folder_name}',  # TODO: change to trajectory file
                     output_indices=f'{folder_name}/indices.txt'
                 )
                 save_pickle(persistent_formations, result_file)
@@ -165,7 +165,7 @@ def process_analysis(trajectory_number: int) -> None:
                 distances_hh_df = find_hh_distances(
                     traj=traj,
                     h_pairs=h_pairs,
-                    file_path=f'{folder_name}' # TODO: change to trajectory file
+                    file_path=f'{folder_name}'  # TODO: change to trajectory file
                 )
                 save_pickle(distances_hh_df, result_file)
 
@@ -233,7 +233,6 @@ def monitor_memory() -> None:
         total_memory_mb = total_memory / (1024 * 1024)  # Convert bytes to MB
         logger.info(f"Total RAM Usage: {total_memory_mb:.2f} MB")
 
-
         sys.stdout.flush()  # Force live updates in some terminals
         time.sleep(10)  # Faster updates
 
@@ -260,7 +259,7 @@ def run_parallel_jobs(function: Any) -> None:
                   ncols=100)
              )
 
-# TODO: update documentation
+
 def process_reaction_times_parallel() -> None:
     """
         Process reaction times in parallel.
@@ -276,9 +275,9 @@ def process_reaction_times_parallel() -> None:
     with ctx.Pool(processes=parallel_jobs) as pool:
         results: List[List[Tuple[int, float]]] = list(
             tqdm(pool.imap(process_reaction_times, trajectory_jobs),
-                           total=len(trajectory_jobs),
-                           desc=f"Processing trajectories",
-                           ncols=100)
+                 total=len(trajectory_jobs),
+                 desc=f"Processing trajectories",
+                 ncols=100)
         )
 
         #  Flatten results (list of lists → single list of tuples)
@@ -314,9 +313,6 @@ def main() -> None:
 
     find_trajectories(root_folder=fp)
 
-
-    # TODO: update
-    #  Process 100 trajectories in batches
     if "reaction_times" in ANALYSIS_TYPE:
         # Run reaction times in parallel
         process_reaction_times_parallel()
@@ -326,6 +322,7 @@ def main() -> None:
         run_parallel_jobs(process_analysis)
 
     stop_monitoring = True  # Stop memory monitoring
+
 
 if __name__ == "__main__":
     try:
