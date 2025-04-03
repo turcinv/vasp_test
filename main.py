@@ -31,6 +31,13 @@ warnings.filterwarnings("ignore", category=UserWarning)
 fp: Path = Path('/mnt/work_2/10diel-GGA-for-analysis/')
 topology_file: str = str(fp.joinpath('10diel_20Li_64H2O/top.pdb'))
 
+# Start trajectory ID
+start_id: int = 1
+
+# End trajectory ID
+end_id: int = 100
+end_id += 1
+
 # Box size
 box_size: float = 13.390
 
@@ -250,7 +257,7 @@ def run_parallel_jobs(function: Any) -> None:
     num_cores = max(mp.cpu_count() - 1, 1)
     parallel_jobs = min(10, num_cores)
 
-    trajectory_jobs: List = list(trajectory_folders.keys())
+    trajectory_jobs: List = [i for i in range (start_id, end_id)]
 
     with ctx.Pool(processes=parallel_jobs) as pool:
         list(tqdm(pool.imap(function, trajectory_jobs),
@@ -270,7 +277,7 @@ def process_reaction_times_parallel() -> None:
     num_cores: int = max(mp.cpu_count() - 1, 1)  # Use at most 12 threads
     parallel_jobs: int = min(10, num_cores)  # Use 10 processes for balance
 
-    trajectory_jobs: List = list(trajectory_folders.keys())
+    trajectory_jobs: List = [i for i in range (start_id, end_id)]
 
     with ctx.Pool(processes=parallel_jobs) as pool:
         results: List[List[Tuple[int, float]]] = list(
